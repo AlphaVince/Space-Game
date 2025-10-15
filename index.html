@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>🚀 Space Shooter Pro Edition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;}
+body{margin:0;background:radial-gradient(ellipse at center,#000010 0%,#000000 80%);color:#e0e6f3;font-family:'Share Tech Mono',monospace;overflow:hidden;}
+h1,h2,h3,h4{font-family:'Orbitron',sans-serif;font-weight:700;color:#50e3c2;margin-bottom:0.2em;text-shadow:0 0 10px #50e3c2;}
+p{font-size:1rem;line-height:1.3;color:#a0a8bf;}
+#loginScreen,#registerScreen,#mainMenu,#hud,#credits,#adminLogin,#adminPanel,#updateLogWindow{max-width:800px;margin:20px auto;padding:20px;border-radius:12px;background:rgba(8,16,32,0.9);box-shadow:0 0 40px #50e3c2;}
+#mainMenu,#hud,#credits,#adminLogin,#adminPanel,#updateLogWindow,#registerScreen{display:none;}
+.visible{display:block!important;}
+input[type="text"],input[type="password"],input[type="number"]{background:#0a1326;border:2px solid #50e3c2;border-radius:6px;color:#50e3c2;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:1rem;outline:none;width:100%;max-width:300px;transition:border-color 0.3s;}
+input:focus{border-color:#00ffbb;}
+button{background:linear-gradient(145deg,#007961,#00b894);border:none;color:#def9ef;font-weight:700;font-family:'Orbitron',sans-serif;font-size:1.1rem;padding:12px 26px;margin:10px 8px 10px 0;border-radius:12px;box-shadow:0 0 15px #00ffbb;cursor:pointer;transition:background 0.4s ease;}
+button:hover{background:linear-gradient(145deg,#00b894,#00ffd1);box-shadow:0 0 20px #00ffd1;}
+button:disabled{opacity:0.5;cursor:not-allowed;}
+#gameCanvas{
+  display:block;
+  margin:20px auto;
+  background:transparent;
+  border:2px solid #50e3c2;
+  border-radius:14px;
+  box-shadow:0 0 50px #50e3c2;
+  width:800px;
+  height:600px;
+}
+#hud{text-align:left;display:flex;justify-content:space-between;align-items:center;font-size:1.3rem;color:#00ffd1;text-shadow:0 0 5px #00ffd1;}
+#leaderboardList{list-style:none;padding-left:0;max-width:400px;margin:15px auto 0;}
+#leaderboardList li{border-bottom:1px solid #004f3f;padding:8px 0;font-weight:600;letter-spacing:0.05em;}
+#credits p{font-size:1.1rem;}
+.error-msg{color:#ff5555;font-weight:700;margin-top:8px;font-family:'Share Tech Mono',monospace;}
+table{border-collapse:collapse;width:100%;}
+table,th,td{border:1px solid #50e3c2;}
+th,td{padding:8px;text-align:center;color:#00ffd1;}
+#touchControls{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:10px;}
+#touchControls button{padding:15px 20px;font-size:1.2rem;}
+#qrCodeContainer{text-align:center;margin-top:20px;}
+#qrCodeContainer img{width:200px;height:200px;border:2px solid #50e3c2;border-radius:12px;}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen" class="visible">
+<h1>🚀 Space Shooter Pro - Login</h1>
+<label>Benutzername:</label><br>
+<input type="text" id="loginUsername" placeholder="Name"><br>
+<label>Passwort:</label><br>
+<input type="password" id="loginPassword" placeholder="Passwort"><br>
+<button onclick="login()">Login</button>
+<button onclick="showRegister()">Registrieren</button>
+<p id="loginMsg" class="error-msg"></p>
+</div>
+
+<!-- Registrierung -->
+<div id="registerScreen">
+<h1>Registrieren</h1>
+<label>Benutzername:</label><br>
+<input type="text" id="regUsername" placeholder="Name"><br>
+<label>Passwort:</label><br>
+<input type="password" id="regPassword" placeholder="Passwort"><br>
+<button onclick="register()">Registrieren</button>
+<button onclick="showLogin()">Zurück zum Login</button>
+<p id="registerMsg" class="error-msg"></p>
+</div>
+
+<!-- Hauptmenü -->
+<div id="mainMenu">
+<h1>🚀 Space Shooter Pro</h1>
+<p id="welcomeText"></p>
+<button onclick="startGame()">Spiel starten</button>
+<button onclick="showCredits()">Credits</button>
+<button onclick="logout()">Abmelden</button>
+<h2>🏆 Top 5 Leaderboard</h2>
+<ul id="leaderboardList"></ul>
+
+<!-- QR-Code -->
+<div id="qrCodeContainer">
+<h3>Scanne um direkt zu spielen!</h3>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAAC9klEQVR4nO2cQY7bMAxFPysDXSrAHCBHsW/QI/VMcwP7KD1AAWkZQMbvQqQjZ7pJ07EzDr0IAkcPkRCC/PySI8Td1/TtfgZwyCGHHHLIIYeOCYleHTBJByCLAFlEBswiQ7YBwy7Tc2h7qCdJJr0pci4QOYUqOzkikCS5hrabnkPbQ9kSQJ9mIX914BgvwtEG1gyy1/Qc2hGKJIBAGfJ3ArmDDJ/zTQ59BUjkNAum80U4xovIEPnRsfhia3LonssqQSSADBCY6x1BBIj8Vqgf7DA9hzaH0CpGBKJPf3uxAT1Jjk++JocegWqOaBLAdIJgOhdwOgUAmEUzyB7Tc2hzqOYIMgHafcYC9Cz2eSQ5IlAbVM8RR4c0Isb6rgB9CiRT0HtjLOpHjJH0qnF8SHVEn0IjJkgW6EsCOEYNGo+I40ONsmxio7eI0BAAUOuHV43DQ2sdEXgVE+pdp8BGW3iOODx0qyM4Rv3hbYBGhMaLR8TRIcsRtWAA2lzERVtELonCq8YrQI16uMZBlZK6FRpW/pVHxNEhqxqWCrS5AMyUiAVozEyPiBeCZIgXqe9+sgDTKbDui2u2mGXP6Tm0DWQ7XbkrQH7TPnSSQOnfBQBCwTQEEDmYkfnka3LoEcj8iCobtcm0jjQssmJtTzz5mhx6BDJluZgSalYXtF1HbVC9+3wlKIuInEk7dNvV83UyYBaOWYuLDDtNz6HNoNazXDa01LBKgNqVaZVLPEccGVq6Ty0TZmAvpnZTP0xgeEQcGVrrCDsvtWyFXk/s+77Gi0CNi61dBz4+pdFfg8Yj4uhQlYxmPS2OQ/zdSWNJ5bfSQk++Jof+A9R2nyolVVFEs7Inf8rvJaBlpwt2oM6EphWMcjvYq8ZLQfYwX6AMuYM6E3akSoadp+fQp0Pd7Y3+/STo09xxOl8EQCgySSCmH8mfBH4B6Lb7VIfK7AmrKW3X4VXj0NDtM116NCJBa0VVFAkrlfHka3LoEUj8n8kccsghhxxyyKF/hP4At4zfsLSwjykAAAAASUVORK5CYII=" alt="Space Shooter QR Code"/>
+</div>
+
+</div>
+
+<!-- HUD -->
+<div id="hud">
+<p><strong>Punkte:</strong> <span id="scoreDisplay">0</span></p>
+<p><strong>Leben:</strong> <span id="livesDisplay">5</span></p>
+<button onclick="endGame()">Spiel beenden</button>
+</div>
+
+<!-- Spiel Canvas -->
+<canvas id="gameCanvas"></canvas>
+
+<!-- Touch Controls -->
+<div id="touchControls">
+<button onclick="keys['a']=true" ontouchstart="keys['a']=true" ontouchend="keys['a']=false">⬅</button>
+<button onclick="keys['d']=true" ontouchstart="keys['d']=true" ontouchend="keys['d']=false">➡</button>
+<button onclick="keys[' ']=true" ontouchstart="keys[' ']=true" ontouchend="keys[' ']=false">🔫</button>
+</div>
+
+<!-- Credits -->
+<div id="credits">
+<h2>Credits</h2>
+<p><strong>Adony:</strong> Idee, Founder</p>
+<p><strong>Vince:</strong> Programmierung, Founder</p>
+<p><strong>Herr Wabner:</strong> Partner</p>
+<button onclick="hideCredits()">Zurück</button>
+</div>
+
+<script>
+"use strict";
+
+// --- Daten ---
+let currentUser=null;
+let accounts=[];
+let scores=[];
+let keys={};
+
+// --- Accounts ---
+if(!localStorage.getItem("ownerCreated")){
+    accounts.push({username:"vince.walle",password:"Rabesocke2022",role:"owner"});
+    localStorage.setItem("accounts",JSON.stringify(accounts));
+    localStorage.setItem("ownerCreated","true");
+}
+function saveAccounts(){localStorage.setItem("accounts",JSON.stringify(accounts));}
+function loadAccounts(){let ac=localStorage.getItem("accounts");accounts=ac?JSON.parse(ac):[];}
+
+// --- Login/Register ---
+function showRegister(){hide(loginScreen);show(registerScreen);}
+function showLogin(){hide(registerScreen);show(loginScreen);}
+function register(){
+    let u=document.getElementById("regUsername").value.trim();
+    let p=document.getElementById("regPassword").value.trim();
+    if(!u||!p){document.getElementById("registerMsg").textContent="Bitte alles ausfüllen!";return;}
+    loadAccounts();
+    if(accounts.find(a=>a.username===u)){document.getElementById("registerMsg").textContent="Benutzername existiert!";return;}
+    accounts.push({username:u,password:p,role:"player"});
+    saveAccounts();
+    currentUser={username:u,role:"player"};
+    hide(registerScreen);show(mainMenu);
+    document.getElementById("welcomeText").textContent=`Willkommen, ${currentUser.username}`;
+}
+function login(){
+    let u=document.getElementById("loginUsername").value.trim();
+    let p=document.getElementById("loginPassword").value.trim();
+    loadAccounts();
+    let acc=accounts.find(a=>a.username===u && a.password===p);
+    if(acc){currentUser=acc;hide(loginScreen);show(mainMenu);document.getElementById("welcomeText").textContent=`Willkommen, ${currentUser.username}`;} 
+    else document.getElementById("loginMsg").textContent="Benutzername oder Passwort falsch!";
+}
+function logout(){currentUser=null;hide(mainMenu);show(loginScreen);}
+
+// --- Credits ---
+function showCredits(){show(credits);}
+function hideCredits(){hide(credits);}
+
+// --- Leaderboard ---
+function renderLeaderboard(){
+    const list=document.getElementById("leaderboardList"); list.innerHTML="";
+    if(scores.length===0){list.innerHTML="<li>Kein Eintrag</li>"; return;}
+    scores.slice(0,5).forEach((e,i)=>{const li=document.createElement("li"); li.textContent=`${i+1}. ${e.name} - ${e.score} Punkte`; list.appendChild(li);});
+}
+renderLeaderboard();
+
+// --- Spiel ---
+const canvas=document.getElementById("gameCanvas"); 
+const ctx=canvas.getContext("2d");
+let player={x:400,y:550,width:30,height:30,speed:5}; 
+let bullets=[], enemies=[], lastShot=0, spawnTimer=0;
+let score=0, lives=5, fireRate=300, gameOver=false;
+
+document.addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
+document.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+function startGame(){
+    hide(mainMenu); show(hud); show(canvas);
+    score=0; gameOver=false; bullets=[]; enemies=[]; lastShot=0; spawnTimer=0;
+    updateHUD();
+    gameLoop();
+}
+function endGame(){
+    if(!gameOver){
+        gameOver=true; 
+        alert(`Game Over! Dein Score: ${score}`);
+        if(currentUser) scores.push({name:currentUser.username,score}); 
+        renderLeaderboard();
+        hide(hud); hide(canvas); 
+        show(mainMenu); 
+    }
+}
+function updateHUD(){document.getElementById("scoreDisplay").textContent=score; document.getElementById("livesDisplay").textContent=lives;}
+
+function gameLoop(){
+    if(gameOver) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Player Movement
+    if(keys["a"] && player.x>0)player.x-=player.speed;
+    if(keys["d"] && player.x<canvas.width)player.x+=player.speed;
+    if(keys["w"] && player.y>0)player.y-=player.speed;
+    if(keys["s"] && player.y<canvas.height)player.y+=player.speed;
+
+    // Shooting
+    if(keys[" "] && Date.now()-lastShot>fireRate){bullets.push({x:player.x,y:player.y-15}); lastShot=Date.now();}
+
+    ctx.fillStyle="#00ffbb";
+    ctx.beginPath(); ctx.moveTo(player.x,player.y-15); ctx.lineTo(player.x-15,player.y+15); ctx.lineTo(player.x+15,player.y+15); ctx.closePath(); ctx.fill();
+
+    // Bullets
+    ctx.fillStyle="#ffff00";
+    bullets.forEach((b,bi)=>{b.y-=8; ctx.fillRect(b.x-2,b.y-10,4,10); if(b.y<0) bullets.splice(bi,1);});
+
+    // Gegner
+    spawnTimer++;
+    if(spawnTimer>60){spawnTimer=0;if(enemies.length<5)enemies.push({x:Math.random()*canvas.width,y:-20,radius:15,speed:1+Math.random()*1.5});}
+    ctx.fillStyle="#ff5555";
+    enemies.forEach((e,ei)=>{
+        e.y+=e.speed; ctx.beginPath(); ctx.arc(e.x,e.y,e.radius,0,2*Math.PI); ctx.fill();
+        // Collision Player
+        if(Math.abs(e.x-player.x)<15 && Math.abs(e.y-player.y)<15){lives--;updateHUD();enemies.splice(ei,1);if(lives<=0)endGame();}
+        // Collision Bullets
+        bullets.forEach((b,bi)=>{if(Math.abs(b.x-e.x)<15 && Math.abs(b.y-e.y)<15){score+=10;updateHUD();bullets.splice(bi,1);enemies.splice(ei,1);}});
+    });
+
+    requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
